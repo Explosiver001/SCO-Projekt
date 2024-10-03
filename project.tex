@@ -1,0 +1,70 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage[czech]{babel}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\def\abstractname{Abstrakt}
+\def\IEEEkeywordsname{Klíčová slova}
+\def\refname{Reference}
+    
+\begin{document}
+
+\title{XSS \-- Cross\--site scripting}
+
+\author{\IEEEauthorblockN{Michal Novák}
+\IEEEauthorblockA{\textit{Fakulta informačních technologií} \\
+\textit{Vysoké učení technické v~Brně}\\
+Brno \\
+xnovak3g@stud.fit.vut.cz}}
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+XSS, DOM, JavaScript, bezpečnost, zranitelnost
+\end{IEEEkeywords}
+
+\section{Úvod XSS}
+XSS, neboli Cross-site scripting, je zranitelnost, kterou řadíme mezi takzvané injekční útoky (Injection attacks). ....dodat obecné info
+
+\section{Historie}
+XSS lze datovat již do počátku systému World Wide Web (WWW, Web). První webové stránky byly statické a~tvořené čistě jazykem HTML (Hypertext Markup Language). Roku 1995 vzniká programovací jazyk JavaScript, který umožňuje spouštět kód v~prohlížeči klienta a~interagovat s~HTML pomocí objektového modelu dokumentu (DOM,  Document Object Model). Vznikají tak dynamické webové stránky umožňující vytvářet dynamická menu, vyskakovací okna, posuvnou galerii obrázků a~mnoho dalších, dnes již známých prvků moderních uživatelských rozhraní. 
+
+Integrace JavaScriptu do prohlížečů ovšem mimo jiné otevřela vrátka i pro mnohé nekalé praktiky. Útočníci brzy odhalili, že pomocí JavaScriptu mohou velmi jednoduše získat data nic netušících uživatelů. 
+
+Před tím, než vůbec samotné XSS vzniklo, se používaly mnohem jednodušší útoky. Útočníkovi stačilo vytvořit stránku, která v~sobě mohla načíst jinou libovolnou stránku do HTML rámce v~témž okně prohlížeče. Útočníkova stránka poté mohla pomocí JavaScriptu \uv{překročit} hranici a~komunikovat přímo s~načtenou stránkou ve vytvořeném rámci. Daly se takto získat přihlašovací údaje z~formulářů, cookies či jiná citlivá data. Jako ochrana proti tomuto typu útoku byla tedy implementována ochrana \uv{same-origin policy}, která zabraňuje JavaScriptu v~překračování hranic stránek a~limituje jej pouze na původní stránku. Útočníci ovšem toto viděli jako výzvu a~začali odhalovat důmyslnější způsoby, jak omezení obcházet.
+
+
+
+~\cite{Grossman2007}
+
+
+\section{Jak funguje XSS}
+
+
+\section{Typy XSS}
+\subsection{Reflected XSS}
+\subsection{Stored XSS}
+\subsection{DOM XSS}
+
+\section{Dopady XSS}
+\subsection{Příklady použití XSS}
+\section{Jak detekovat XSS zranitelnosti}
+\section{Předcházení útoků XSS}
+\section{Závěr}
+
+
+
+\bibliographystyle{IEEEtran}  
+\bibliography{project}  
+\end{document}
