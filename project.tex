@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[11pt,conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
@@ -35,7 +35,9 @@ XSS, DOM, JavaScript, bezpečnost, zranitelnost
 \end{IEEEkeywords}
 
 \section{Úvod XSS}
-XSS, neboli Cross-site scripting, je zranitelnost, kterou řadíme mezi takzvané injekční útoky (Injection attacks). ....dodat obecné info
+XSS, neboli Cross-site scripting, je zranitelnost, kterou řadíme mezi takzvané injekční útoky (Injection attacks). Útok probíhá přímo na straně klienta, přičemž útočník se pokouší různými metodami vložit svůj škodlivý kód do jinak neškodného kódu.
+
+
 
 \section{Historie}
 XSS lze datovat již do počátku systému World Wide Web (WWW, Web). První webové stránky byly statické a~tvořené čistě jazykem HTML (Hypertext Markup Language). Roku 1995 vzniká programovací jazyk JavaScript, který umožňuje spouštět kód v~prohlížeči klienta a~interagovat s~HTML pomocí objektového modelu dokumentu (DOM,  Document Object Model). Vznikají tak dynamické webové stránky umožňující vytvářet dynamická menu, vyskakovací okna, posuvnou galerii obrázků a~mnoho dalších, dnes již známých prvků moderních uživatelských rozhraní. 
@@ -44,27 +46,79 @@ Integrace JavaScriptu do prohlížečů ovšem mimo jiné otevřela vrátka i pr
 
 Před tím, než vůbec samotné XSS vzniklo, se používaly mnohem jednodušší útoky. Útočníkovi stačilo vytvořit stránku, která v~sobě mohla načíst jinou libovolnou stránku do HTML rámce v~témž okně prohlížeče. Útočníkova stránka poté mohla pomocí JavaScriptu \uv{překročit} hranici a~komunikovat přímo s~načtenou stránkou ve vytvořeném rámci. Daly se takto získat přihlašovací údaje z~formulářů, cookies či jiná citlivá data. Jako ochrana proti tomuto typu útoku byla tedy implementována ochrana \uv{same-origin policy}, která zabraňuje JavaScriptu v~překračování hranic stránek a~limituje jej pouze na původní stránku. Útočníci ovšem toto viděli jako výzvu a~začali odhalovat důmyslnější způsoby, jak omezení obcházet.
 
-
-
-~\cite{Grossman2007}
+Označení cross-site scripting (XSS) se poprvé objevilo  v~interním dokumentu \uv{Script injection} společnosti Microsoft. Zaměstnanec společnosti, David Ross, tehdy popsal jak takový útok může vypadat a~jak je mu možno předcházet.~\cite{Grossman2007}
 
 
 \section{Jak funguje XSS}
+\subsection{Kód na straně klienta}
+Kód na straně klienta (Client-side code) je, jak už název napovídá, kód, který běží přímo u uživatele na počítači. V~kontextu XSS se typicky jedná o kód spouštěný v prohlížeči po načtení webové stránky. Client-side kód je velmi užitečný k~tvorbě dynamických webových stránek nebo stránek s interaktivním obsahem, který nepotřebuje komunikovat se servery.~\cite{XSS-cloudflare}
 
+Mnohdy je XSS spojováno pouze s jazykem JavaScript. Mohla by k tomu i napovídat historie XSS. JavaScript je sice v dnešní době nejčastěji využíván k útokům typu XSS, ale rozhodně není jediným. V minulosti byl například k XSS útokům často využíván ActionScript - objektově orientovaný programovací jazyk, který využíval platformy Adobe Flash. Ve starších verzích prohlížeče Internet Explorer bylo dále možno narazit na jazyk VBScript, který se podobal JavaScriptu. V~dnešní době je naopak možno setkat se s útoky přes WebAssembly.
+
+\subsection{Princip provedení útoku}
+Přestože JavaScript není jediným jazykem, který je náchylný na útoky XSS, je pravděpodobně nejlepší pro vysvětlení principu. JavaScript má v rámci prohlížeče přístup k citlivým údajům uživatele, kterých by se útočník chtěl zmocnit. Takovými údaji mohou být například cookies, geolokační údaje, nebo dokonce i přístup k webkameře. JavaScript ale mimo jiné disponuje i možností vykonávat HTTP dotazy, které mohou být využity k odeslání ukradených dat k útočníkovi. Samotný útok se nejčastěji skládá ze 3 kroků:
+\begin{enumerate}
+    \item Oběť načte webovou stránku se škodlivým kódem, který krade uživatelská data.
+    
+    \item Škodlivý kód pošle pomocí HTTP dotazu ukradená data na útočníkův webový server.
+
+    \item Útočník využije ukradených dat k vlastnímu prospěchu. Nejčastěji se využívá ukradených cookie, které obsahují tzv. \uv{session token}, pomocí něhož se může útočník vydávat za svoji oběť.~\cite{XSS-cloudflare}
+    
+\end{enumerate}
 
 \section{Typy XSS}
-\subsection{Reflected XSS}
-\subsection{Stored XSS}
-\subsection{DOM XSS}
+Princip je poměrně jasný a jednoznačný. Ovšem jak se vůbec útočníkovi povedlo vložit vlastní škodlivý kód na webovou stránku? Je zřejmé, že útočník danou stránku neprovozuje, jinak by vůbec takový útok provádět nemusel. Pokud stránku neprovozuje, tak ji samozřejmě nemůže ani upravovat. To by platilo v případě, že je stránka plně vytvářena pomocí serveru. Ovšem, jak už bylo dříve uvedeno, alespoň nějaké část kódu běží u samotného uživatele. 
+
+Cross-site scripting nastává, když škodlivý kód je:
+\begin{enumerate}
+    \item vložen na webovou stránku přes nedůvěryhodný zdroj (nejčastěji webový požadavek),
+    \item obsažen v dynamickém obsahu, který je poslán uživateli bez toho, aby byl předem zkontrolován na přítomnost škodlivého kódu.
+\end{enumerate}
+
+\subsection{Běžně používané rozdělení}
+Dnes je asi stále nejčastěji používané dělení XSS útoků na tři níže zmíněné typy. 
+
+\subsubsection{Reflektované XSS}
+Reflektované XSS, někdy též nazývané jako neperzistentní nebo XSS typu 1, využívá k provedení útoku webového serveru tak, že jej donutí vrátit injektovaný škodlivý kód ve své odpovědi na webový dotaz. Útočník k provedení útoku využívá upravené adresy URL nebo vstup webového formuláře (jenž je mnohdy při odeslání kódován do URL), které se zpracovávají na straně serveru. Pokud na serveru chybí řádné sanitace vstupů a útočníkův vstup je i součástí odpovědi serveru, dostane se škodlivý kód zpět do prohlížeče a je spuštěn. Odtud také plyne název reflektované XSS. Navíc, škodlivý kód přišel ze serveru společně s oficiální odpovědí, a proto je proti takovému útoku ochrana typu \uv{same-origin policy} naprosto neefektivní. 
+
+Stále je ale nutné doručit infikovanou stránku oběti. K~tomu je možné využít běžné internetové pošty, přímých zpráv, vyvěšených QR kódů, nebo jiných metod, kterými lze poslat či předat adresou URL. Odkaz vede na důvěřovanou stránku a~oběť ani mnohdy netuší, že byla právě otevřením odkazu napadena.
+
+\subsubsection{Uložené XSS}
+Uložené XSS, jinak také perzistentní nebo XSS typu 2, se od reflektovaného XSS liší způsobem uchování škodlivého kódu. Zatímco u reflektovaného XSS přežívá škodlivý kód například pouze v URL, u uloženého XSS se trvale zapíše do úložiště webového serveru, čímž je převážně nějaká databáze. Útočník k útoku využívá webových stránek, které obsahují uživatelský obsah, jako jsou diskuzní fóra, sekce komentářů, recenze a mnoho dalších. Na straně webového serveru opět schází správná sanitace uživatelského vstupu, který je ukládán. 
+
+V případě uloženého XSS ani není nutné, aby útočník přímo posílal infikované stránky svým obětem. Stačí, aby oběti samy od sebe navštívily takové stránky, což z tohoto typu dělá ten nejvíce nebezpečný. Při načtení infikovaného webu se škodlivý kód dostane do stránky z úložiště serveru. Opět tedy platí, že ochrana typu \uv{same-origin policy} nemá šanci něčemu takovému zabránit.~\cite{XSS-owasp}
+
+\subsubsection{DOM XSS}
+DOM XSS, neboli XSS typu 0, je speciální varianta XSS, která se na první pohled podobá reflektovanému XSS. Zatímco u~reflektovaného XSS je škodlivý kód prvně poslán na server a poté zase zpět, u~DOM XSS škodlivý kód neopustí prohlížeč své oběti. Prerekvizitou jsou dynamické webové stránky, které si ze serveru stahují pouze potřebná data, ale samotný základ stránky zůstává beze změny. V~tomto případě bývá uživatelský vstup získaný formulářem často přímo zobrazen editací DOM (document object modelu) a zakódován do URL stránky. Pokud tedy, tentokráte na straně klienta, chybí řádná sanitace vstupů, je injektovaný škodlivý kód spuštěn. Postup napadnutí oběti útočníkem je poté v~zásadě identický s~variantou reflektovaného XSS.~\cite{DOM-XSS-owasp}
+
+\subsection{Nové a přesnější rozdělení}
+V realitě není úplně jednoduché separovat reflektované, uložené a DOM XSS, jelikož se velmi často překrývají. Proto bylo roku 2012 komunitou zabývající se výzkumem XSS navrženo používání nových termínů na kategorizaci XSS.
+
+\subsubsection{Serverové XSS}
+XSS nazýváme serverovým, pokud nedůvěryhodná data pocházejí z HTTP odpovědi generované na straně serveru. Nedůvěryhodná data už mohou mít libovolný původ, ať už z HTTP dotazu, či z úložiště serveru. V~tomto případě je zranitelnost na straně serveru a prohlížeč pouze vykresluje odpověď a spouští validní obsažené kódy.
+
+
+\subsubsection{Klientské XSS}
+Klientské XSS nastává, když jsou nedůvěryhodná data použita k úpravě DOM za použití JavaScriptu, který může nezabezpečeně vložit další funkční JavaScript kód do DOM. Zdrojem nedůvěryhodných dat u klientského XSS může být cokoliv, například klientské úložiště, nebo data stažená ze serveru.~\cite{TYPES-XSS-owasp}
+
 
 \section{Dopady XSS}
-\subsection{Příklady použití XSS}
+Dopady XSS útoku na oběť jsou rovnocenné pro všechny typy XSS útoku a nezáleží na tom, jakým způsobem se škodlivý kód k oběti dostane. Rozsah škod úspěšného útoku může být velmi variabilní.
+
+Často se XSS útoky využívají ke zcizení cookies, které mohou obsahovat citlivá data včetně takzvaného \uv{session token}. \uv{Session token} je identifikátor HTTP spojení, jenž se používá k autentizaci uživatele. Pokud dojde ke zcizení, může se útočník jednoduše vydávat za svou oběť. Nicméně lze pomoci XSS ukrást i samotné přihlašovací údaje, například injektováním kódu, který uživatele donutí opětovně zadat přihlašovací údaje. 
+
+Zajímavým uplatněním XSS je i nežádoucí pozměnění zobrazované webové stránky. Pozměnění se může týkat jak textu, tak zobrazovaných grafických prvků. Zde nemusí být nutně obětí ten, co si webovou stránku zobrazí, nýbrž provozovatel stránky, jehož dobré jméno tímto může být poškozeno. 
+
+Dalšími příklady mohou být přesměrování na jinou webovou stránku, instalace nežádoucího programu (malware), vložení dalšího škodlivého kódu, atd.
+
+
+\section{Příklady použití XSS}
 \section{Jak detekovat XSS zranitelnosti}
 \section{Předcházení útoků XSS}
 \section{Závěr}
 
 
-
+\newpage
 \bibliographystyle{IEEEtran}  
 \bibliography{project}  
 \end{document}
