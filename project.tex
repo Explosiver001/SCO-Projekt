@@ -1,4 +1,4 @@
-\documentclass[11pt,conference]{IEEEtran}
+\documentclass[11pt,conference, a4paper]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
@@ -7,6 +7,25 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+
+\usepackage{listings}
+\lstset{
+    frame=shadowbox,
+    basicstyle=\ttfamily\normalsize,
+    numbers=left, 
+    numbersep=10pt,
+    keepspaces=true,   
+    breakatwhitespace=true,         
+    breaklines=true,
+}
+
+\makeatletter
+\def\lst@makecaption{%
+  \def\@captype{table}%
+  \@makecaption
+}
+\makeatother
+
 \usepackage[czech]{babel}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -46,7 +65,7 @@ Integrace JavaScriptu do prohlížečů ovšem mimo jiné otevřela vrátka i pr
 
 Před tím, než vůbec samotné XSS vzniklo, se používaly mnohem jednodušší útoky. Útočníkovi stačilo vytvořit stránku, která v~sobě mohla načíst jinou libovolnou stránku do HTML rámce v~témž okně prohlížeče. Útočníkova stránka poté mohla pomocí JavaScriptu \uv{překročit} hranici a~komunikovat přímo s~načtenou stránkou ve vytvořeném rámci. Daly se takto získat přihlašovací údaje z~formulářů, cookies či jiná citlivá data. Jako ochrana proti tomuto typu útoku byla tedy implementována ochrana \uv{same-origin policy}, která zabraňuje JavaScriptu v~překračování hranic stránek a~limituje jej pouze na původní stránku. Útočníci ovšem toto viděli jako výzvu a~začali odhalovat důmyslnější způsoby, jak omezení obcházet.
 
-Označení cross-site scripting (XSS) se poprvé objevilo  v~interním dokumentu \uv{Script injection} společnosti Microsoft. Zaměstnanec společnosti, David Ross, tehdy popsal jak takový útok může vypadat a~jak je mu možno předcházet.~\cite{Grossman2007}
+Označení cross-site scripting (XSS) se poprvé objevilo  v~interním dokumentu \uv{Script injection} společnosti Microsoft. Zaměstnanec společnosti, David Ross, tehdy popsal, jak takový útok může vypadat a~jak je mu možno předcházet.~\cite{Grossman2007}
 
 
 \section{Jak funguje XSS}
@@ -62,7 +81,7 @@ Přestože JavaScript není jediným jazykem, který je náchylný na útoky XSS
     
     \item Škodlivý kód pošle pomocí HTTP dotazu ukradená data na útočníkův webový server.
 
-    \item Útočník využije ukradených dat k vlastnímu prospěchu. Nejčastěji se využívá ukradených cookie, které obsahují tzv. \uv{session token}, pomocí něhož se může útočník vydávat za svoji oběť.~\cite{XSS-cloudflare}
+    \item Útočník využije ukradených dat k vlastnímu prospěchu. Nejčastěji se využívá ukradených cookies, které obsahují tzv. \uv{session token}, pomocí něhož se může útočník vydávat za svoji oběť.~\cite{XSS-cloudflare}
     
 \end{enumerate}
 
@@ -81,7 +100,7 @@ Dnes je asi stále nejčastěji používané dělení XSS útoků na tři níže
 \subsubsection{Reflektované XSS}
 Reflektované XSS, někdy též nazývané jako neperzistentní nebo XSS typu 1, využívá k provedení útoku webového serveru tak, že jej donutí vrátit injektovaný škodlivý kód ve své odpovědi na webový dotaz. Útočník k provedení útoku využívá upravené adresy URL nebo vstup webového formuláře (jenž je mnohdy při odeslání kódován do URL), které se zpracovávají na straně serveru. Pokud na serveru chybí řádné sanitace vstupů a útočníkův vstup je i součástí odpovědi serveru, dostane se škodlivý kód zpět do prohlížeče a je spuštěn. Odtud také plyne název reflektované XSS. Navíc, škodlivý kód přišel ze serveru společně s oficiální odpovědí, a proto je proti takovému útoku ochrana typu \uv{same-origin policy} naprosto neefektivní. 
 
-Stále je ale nutné doručit infikovanou stránku oběti. K~tomu je možné využít běžné internetové pošty, přímých zpráv, vyvěšených QR kódů, nebo jiných metod, kterými lze poslat či předat adresou URL. Odkaz vede na důvěřovanou stránku a~oběť ani mnohdy netuší, že byla právě otevřením odkazu napadena.
+Stále je ale nutné doručit infikovanou stránku oběti. K~tomu je možné využít běžné internetové pošty, přímých zpráv, vyvěšených QR kódů, nebo jiných metod, kterými lze poslat či předat adresou URL. Odkaz vede na důvěryhodnou stránku a~oběť ani mnohdy netuší, že byla právě otevřením odkazu napadena.
 
 \subsubsection{Uložené XSS}
 Uložené XSS, jinak také perzistentní nebo XSS typu 2, se od reflektovaného XSS liší způsobem uchování škodlivého kódu. Zatímco u reflektovaného XSS přežívá škodlivý kód například pouze v URL, u uloženého XSS se trvale zapíše do úložiště webového serveru, čímž je převážně nějaká databáze. Útočník k útoku využívá webových stránek, které obsahují uživatelský obsah, jako jsou diskuzní fóra, sekce komentářů, recenze a mnoho dalších. Na straně webového serveru opět schází správná sanitace uživatelského vstupu, který je ukládán. 
@@ -109,12 +128,50 @@ Dopady XSS útoku na oběť jsou rovnocenné pro všechny typy XSS útoku a nez�
 
 Zajímavým uplatněním XSS je i nežádoucí pozměnění zobrazované webové stránky. Pozměnění se může týkat jak textu, tak zobrazovaných grafických prvků. Zde nemusí být nutně obětí ten, co si webovou stránku zobrazí, nýbrž provozovatel stránky, jehož dobré jméno tímto může být poškozeno. 
 
-Dalšími příklady mohou být přesměrování na jinou webovou stránku, instalace nežádoucího programu (malware), vložení dalšího škodlivého kódu, atd.
+Dalšími příklady mohou být přesměrování na jinou webovou stránku, instalace nežádoucího programu \mbox{(malware)}, vložení dalšího škodlivého kódu, atd.
 
 
 \section{Příklady použití XSS}
+
+\begin{lstlisting}[
+  caption=Matrix multiplication pseudo code,
+  label=lst1:mxm,]
+<SCRIPT type="text/javascript">
+var adr = '../evil.php?cakemonster=' + escape(document.cookie);
+</SCRIPT>
+\end{lstlisting}
+
 \section{Jak detekovat XSS zranitelnosti}
+XSS zranitelnosti mohou být poměrně náročné na detekci a odstranění z již existující webové aplikace. Nejlepším způsobem bývá provedení plné revize zdrojových kódů aplikace. Nejdůležitější při revizi je zaměřit se na místa, na kterých se vkládají uživatelský vstup nebo data z HTTP dotazů do HTML kódu webové stránky. Je nutné dávat si pozor na veškeré HTML tagy, které mohou být použity pro spouštění JavaScript kódu, a ne jen na \texttt{<script>} tag.
+
+K odhalení XSS zranitelností je také možno použít některé užitečné nástroje, jako jsou například Nessus a Nikto. Pokud je zranitelná nějaká část aplikace, je velmi pravděpodobné, že problém může být i na jiných místech.
+
+
+
 \section{Předcházení útoků XSS}
+XSS je komplexní problém, který trápí vývojáře už nějakou dobu a rozhodně v brzké době jen tak nezmizí. Neexistuje hromadné řešení, které by mohlo být jednoduše aplikovatelné pro většinu webových aplikací.
+
+Problémem je oddělit od sebe požadovanou funkčnost webové aplikace od škodlivé činnosti. Prohlížeč sám o sobě není bezpečný. Byl vytvořen k provádění HTTP dotazů a následné zobrazování výsledků, což mimo jiné zahrnuje i schopnost spouštět kódy napsané v jazyce JavaScript. JavaScript je standardním jazykem webových vývojářů, kteří jej používají všemi možnými způsoby, ať už dobrými či špatnými, aby dosáhli požadované funkcionality. Prohlížeč tedy nemůže jen tak vyhodnotit, zda-li kód provádí něco nekalého a nežádoucího. I~činnosti, jako například procházení cookies a čtení ze systémové schránky (clipboard), jsou mnohdy volány validními programy a taková funkcionalita nemůže být jednoduše zakázána.
+
+Ze všech problémů však není možné vinit prohlížeč. Většině zranitelností by šlo předejít poměrně jednoduše. Základem je, aby vývojáři začali vytvářet bezpečné stránky, což se aktuálně často neděje. Útočníci mohou jednoduše využít chyb vývojářů k vlastnímu prospěchu. Proto je nutné vzdělávat vývojáře v metodách, jak zabezpečit svoje aplikace. \cite{Grossman2007}
+
+% https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+
+% Framework Security
+Naštěstí, webové aplikace využívající moderních frameworků obsahují méně chyb, které by mohly být využity k XSS. Tyto frameworky totiž vedou vývojáře k lepším bezpečnostním praktikám a pomáhají bojovat proti XSS. Avšak i tak by měl vývojář mít přehled o tom, jak daný framework funguje a jaká jsou jeho slabá místa. Zároveň stále existují situace, ve kterých zvolený framework neposkytuje potřebnou funkcionalitu, kterou nakonec vývojář musí udělat svépomoci.
+
+% XSS Defense Philosophy
+
+Aby byl XSS útok úspěšný, musí se útočníkovi podařit vložit škodlivý kód do aplikace a následně jej spustit. Proto je potřeba zabezpečit všechny proměnné aplikace. Zajištěním, že veškerý obsah uložený v proměnných projde řádnou validací a sanitací nebo překódováním do \uv{escape} sekvencí, je možno docílit potřebné ochrany proti injekcím kódu. Každou proměnnou, která tímto procesem neprojde, je možno považovat za potenciální zranitelnost.
+
+\subsection{Kódování výstupu} % Output Encoding
+
+\subsection{HTML sanitace} % HTML Sanitization
+
+
+
+
+
 \section{Závěr}
 
 
