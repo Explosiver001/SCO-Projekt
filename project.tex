@@ -1,4 +1,4 @@
-\documentclass[11pt,conference, a4paper]{IEEEtran}
+\documentclass[11pt, conference, a4paper]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
@@ -12,8 +12,6 @@
 \lstset{
     frame=shadowbox,
     basicstyle=\ttfamily\normalsize,
-    numbers=left, 
-    numbersep=10pt,
     keepspaces=true,   
     breakatwhitespace=true,         
     breaklines=true,
@@ -38,7 +36,7 @@
 
 \title{XSS \-- Cross\--site scripting}
 
-\author{\IEEEauthorblockN{Michal Novák}
+\author{\IEEEauthorblockN{Bc. Michal Novák}
 \IEEEauthorblockA{\textit{Fakulta informačních technologií} \\
 \textit{Vysoké učení technické v~Brně}\\
 Brno \\
@@ -222,14 +220,38 @@ Naštěstí, webové aplikace využívající moderních frameworků obsahují m
 
 % XSS Defense Philosophy
 
-Aby byl XSS útok úspěšný, musí se útočníkovi podařit vložit škodlivý kód do aplikace a~následně jej spustit. Proto je potřeba zabezpečit všechny proměnné aplikace. Zajištěním, že veškerý obsah uložený v proměnných projde řádnou validací a~sanitací nebo překódováním do \uv{escape} sekvencí, je možno docílit potřebné ochrany proti injekcím kódu. Každou proměnnou, která tímto procesem neprojde, je možno považovat za potenciální zranitelnost.~\cite{Prevention-XSS-owasp}
+Aby byl XSS útok úspěšný, musí se útočníkovi podařit vložit škodlivý kód do aplikace a~následně jej spustit. Proto je potřeba zabezpečit všechny proměnné aplikace. Zajištěním, že veškerý obsah uložený v proměnných projde řádnou validací a~sanitací nebo překódováním do \uv{escape} sekvencí, je možno docílit potřebné ochrany proti injekcím kódu. Každou proměnnou, která tímto procesem neprojde, je možno považovat za potenciální zranitelnost.
 
 \subsection{Kódování výstupu} % Output Encoding
+Kódování výstupu (output encoding) je doporučený způsob, jak bezpečně vypisovat data přesně tak, jak je uživatel vepsal. Proměnné by neměly být vyhodnocovány jako kód namísto textu. Ve většině moderních frameworků je tato funkce zabudována automaticky. Pokud však framework není použit, nebo má použitý framework \uv{díry}, je doporučeno použít pro kódování výstupu externí knihovnu. Každá proměnná použitá pro v uživatelském rozhraní by správně měla projít kódovací funkcí.
+
+Existuje mnoho druhů kódování výstupu pro prohlížeč, jelikož jsou zvlášť zpracovávány HTML, CSS, JavaScript  kódy a URL adresy. Při použití špatné metody kódování může dojít k oslabení systému a omezení funkcionality aplikace. 
+
+
 
 \subsection{HTML sanitace} % HTML Sanitization
+Mnohé webové stránky v sobě mají pro zjednodušení implementovány WYSIWYG (What You See Is What You Get) editor pro úpravu HTML obsahu jednotlivých stránek. Zakódování obsahu v tomto případě sice zablokuje možné XSS, ale zároveň zničí i zamýšlenou funkcionalitu, jako je například stylizování. V tomto případě je možno použít sanitaci HTML. HTML sanitace odstraní nebezpečný HTML kód z proměnné a vrátí pouze bezpečné HTML. Organizace OWASP k tomuto doporučuje knihovnu DOMPurify. 
 
 
+\subsection{Safe sinks}
+Safe sinks označuje bezpečná místa nebo cíle, kam je možno vložit v aplikaci data, aniž by došlo k narušení bezpečnosti. V praxi se jedná o techniky, které zajišťují, že data z uživatelských vstupů jsou před jejich vložením na webové stránky správně ošetřena. Rozhodně se nedoporučuje používat atributu \texttt{innerHTML} pro vkládání textu.~\cite{Prevention-XSS-owasp}
 
+\begin{lstlisting}[
+  caption=Příklad \uv{safe sinks} v JavaScript kódu,
+  label=lst1:ss,]
+elem.textContent = dangerVar;
+elem.insertAdjacentText(dangerVar);
+elem.className = dangerVar;
+elem.setAttribute(safeName, dangerVar);
+formfield.value = dangerVar;
+document.createTextNode(dangerVar);
+document.createElement(dangerVar);
+elem.innerHTML = DOMPurify.sanitize(dangerVar);
+\end{lstlisting}
+
+
+\subsection{Zabezpečení cookies}
+Webové aplikace mohou mít nastaveny speciální opatření, jakým způsobem se pracuje s cookies. Obsah cookies může být navázán na specifickou IP adresu, což prakticky znemožňuje využít ukradených \uv{session tokenů}.
 
 
 \section{Závěr}
