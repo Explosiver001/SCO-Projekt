@@ -31,6 +31,7 @@
 \def\abstractname{Abstrakt}
 \def\IEEEkeywordsname{Klíčová slova}
 \def\refname{Reference}
+\renewcommand{\lstlistingname}{Výpis}
     
 \begin{document}
 
@@ -165,15 +166,40 @@ Dalšími příklady mohou být přesměrování na jinou webovou stránku, inst
 
 
 \section{Příklady použití XSS}
-{\color{red}TODO}
+Na internetu existuje hromada příkladů XSS a také stránek, na kterých si lze základy XSS vyzkoušet. 
 
 \subsection{Principy na příkladech}
-Aby bylo možno ukázat příklady reálného útoku, je nejprve nutné pochopit základní principy, kterých je možno využít.
+Aby bylo možno ukázat příklady reálného útoku, je nejprve nutné pochopit základní principy, kterých je možno využít. V tomto případě je lepší ukázat principy podle starého dělení, jelikož je pravděpodobně více pochopitelné.
 
+\subsubsection{Reflektované XSS}
+Nejjednodušším příkladem, na kterém lze ukázat, jaké zranitelnosti lze využít, je základní \uv{echo} server, který pouze vypíše vstup uživatele.
 
 \begin{lstlisting}[
-  caption=Kód na serveru,
-  label=lst1:ks,]
+  caption=Jednoduchý PHP \uv{echo} server,
+  label=lst1,]
+<html>
+<body>
+
+<?php
+echo "User input:" . $_GET['input'];
+?>
+
+</body>
+</html>
+\end{lstlisting}
+
+Pokud se na serveru vyskytuje kód výpisu \ref{lst1}, stačí aby útočník vytvořil URL s parametrem \texttt{input}, který obsahuje škodlivý kód\footnote{MC ve výpisu značí škodlivý kód.}. 
+\begin{lstlisting}[
+  caption=Ukázka URL pro výpis \ref{lst1},
+  label=lst2,]
+http://site/?input=<script>MC</script>
+\end{lstlisting}
+
+Podobný princip lze využít i pokud server sám zpracovává neznámé URL implementováním \uv{Not found} stránky, která vypisuje chybnou URL.
+
+\begin{lstlisting}[
+  caption=\uv{Not found} PHP stránka,
+  label=lst3,]
 <html>
 <body>
 <?php
@@ -183,6 +209,69 @@ print "Not found: " . urldecode($_SERVER["REQUEST_URI"]);
 </body>
 </html>
 \end{lstlisting}
+
+V případě kódu z výpisu \ref{lst3} již není potřeba ukládat škodlivý kód do parametrů, ale může přímo tvořit URL.
+
+\begin{lstlisting}[
+  caption=Ukázka URL pro výpis \ref{lst3},
+  label=lst4,]
+http://site/<script>MC</script>
+\end{lstlisting}
+
+\subsubsection{Uložené XSS}
+U uloženého XSS již nejsou kódy tak jednoduché na ukázku, proto bude ukázán jen zjednodušený základní princip. Data se na server dostávají stejnou cestou, jako je tomu u reflektovaného XSS. Před prvním výpisem dat však dochází k jejich uložení do paměti serveru (například databáze) a následnému čtení z paměti.
+
+\begin{lstlisting}[
+  caption=Příklad PHP serveru s ukládáním dat,
+  label=lst5,]
+<html>
+<body>
+
+<?php
+// store data in databse
+$db->store($_GET['input']);
+
+// fetch data from database
+echo $db->getAllData();
+?>
+
+</body>
+</html>
+\end{lstlisting}
+
+Na příkladu z výpisu \ref{lst5} se provede jednoduché uložení uživatelského vstupu do databáze a následný výpis všech uložených dat v databázi. Příklad URL je shodný s ukázkou ve výpisu \ref{lst2}.
+
+\subsubsection{DOM XSS}
+Příklad pro DOM XSS může vypadat podobně jako příklad u reflektovaného XSS, pouze se vše bude dít na straně klienta. 
+
+\begin{lstlisting}[
+  caption=Příklad DOM XSS,
+  label=lst6,]
+<html>
+
+<script>
+function(){
+var data = (new URLSearchParams( window.location.search)) .get('input')
+document.body.innerHTML = data;
+}
+</script>
+
+<body onload="function()">
+
+</body>
+</html>
+\end{lstlisting}
+
+Kód z výpisu \ref{lst6} získá uživatelská data z URL parametru \texttt{input} a vloží je do HTML prvku \texttt{body}. V tomto případě však nelze plně použít URL z výpisu \ref{lst2}, jelikož by se script pouze vložil, ale dále nespustil. 
+
+\begin{lstlisting}[
+  caption=Ukázka URL pro výpis \ref{lst6},
+  label=lst7,]
+http://site/input?<img src=x onerror="MC">
+\end{lstlisting}
+
+V příkladu URL z výpisu \ref{lst7} je použit HTML tag \texttt{img}, který při správném použití může spustit JavaScript. 
+
 
 \subsection{Reálné útoky}
 Nejjednodušším příkladem reálného útoku je tzv. \uv{cookie grabber}, který získá cookies uživatele a pošle jej pomocí HTTP dotazu na útočníkův server. Tento útok je možno realizovat libovolným typem XSS.
@@ -225,7 +314,7 @@ Aby byl XSS útok úspěšný, musí se útočníkovi podařit vložit škodliv�
 \subsection{Kódování výstupu} % Output Encoding
 Kódování výstupu (output encoding) je doporučený způsob, jak bezpečně vypisovat data přesně tak, jak je uživatel vepsal. Proměnné by neměly být vyhodnocovány jako kód namísto textu. Ve většině moderních frameworků je tato funkce zabudována automaticky. Pokud však framework není použit, nebo má použitý framework \uv{díry}, je doporučeno použít pro kódování výstupu externí knihovnu. Každá proměnná použitá pro v uživatelském rozhraní by správně měla projít kódovací funkcí.
 
-Existuje mnoho druhů kódování výstupu pro prohlížeč, jelikož jsou zvlášť zpracovávány HTML, CSS, JavaScript  kódy a URL adresy. Při použití špatné metody kódování může dojít k oslabení systému a omezení funkcionality aplikace. 
+Existuje mnoho druhů kódování výstupu pro prohlížeč, jelikož jsou zvlášť zpracovávány HTML, CSS, JavaScript  kódy a URL adresy. Při použití špatné metody kódování může dojít k oslabení systému a~omezení funkcionality aplikace. 
 
 
 
